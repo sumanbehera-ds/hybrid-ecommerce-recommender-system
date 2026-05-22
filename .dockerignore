@@ -1,0 +1,7 @@
+rsmenv/
+__pycache__/
+*.pyc
+.git/
+.ipynb_checkpoints/
+mlruns/
+data/raw/
