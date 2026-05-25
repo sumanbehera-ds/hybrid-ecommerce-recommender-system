@@ -3,10 +3,7 @@ uvicorn
 pydantic
 pandas
 numpy
-scikit-learn
-scipy
-torch
 joblib
-mlflow
-streamlit
-requests
+scikit-learn
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.1+cpu

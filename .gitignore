@@ -1,34 +1,18 @@
-# Environment
 rsmenv/
 venv/
 .env
 
-# Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Jupyter
 .ipynb_checkpoints/
 
-# Data
 data/raw/
 data/processed/
 
-# Model artifacts
 models/
-
-# MLflow
 mlruns/
 mlflow.db
 
-# Docker / logs
 *.log
-
-# OS
 .DS_Store
 Thumbs.db
-mlflow.db
-
-mlflow.db

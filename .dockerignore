@@ -1,7 +1,13 @@
 rsmenv/
+venv/
+.git/
 __pycache__/
 *.pyc
-.git/
 .ipynb_checkpoints/
-mlruns/
+
 data/raw/
+data/processed/
+mlruns/
+mlflow.db
+
+models/
