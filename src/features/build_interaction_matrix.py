@@ -1,7 +1,7 @@
 import pandas as pd
 import joblib
 from pathlib import Path
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, save_npz
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -33,6 +33,7 @@ def build_sparse_matrix(df):
             (df["user_idx"], df["item_idx"])
         )
     )
+    matrix.sum_duplicates()
 
     return matrix
 
@@ -48,7 +49,7 @@ if __name__ == "__main__":
 
     joblib.dump(user_encoder, USER_ENCODER_PATH)
     joblib.dump(item_encoder, ITEM_ENCODER_PATH)
-    joblib.dump(interaction_matrix, MATRIX_PATH)
+    save_npz(MATRIX_PATH, interaction_matrix)
 
     print("Interaction matrix shape:", interaction_matrix.shape)
     print("Saved interaction matrix and encoders.")

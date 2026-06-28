@@ -1,5 +1,14 @@
-
 def hit_rate_at_k(actual_items, recommended_items, k=10):
+    actual_items = set(actual_items)
+    recommended_items = set(recommended_items[:k])
+
+    if len(actual_items) == 0:
+        return 0.0
+
+    return 1.0 if actual_items.intersection(recommended_items) else 0.0
+
+
+def recall_at_k(actual_items, recommended_items, k=10):
     actual_items = set(actual_items)
     recommended_items = set(recommended_items[:k])
 

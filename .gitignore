@@ -9,7 +9,7 @@ __pycache__/
 data/raw/
 data/processed/
 
-models/
+/models/
 mlruns/
 mlflow.db
 

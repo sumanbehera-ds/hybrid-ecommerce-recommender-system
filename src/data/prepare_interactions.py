@@ -27,7 +27,14 @@ def prepare_interactions(events: pd.DataFrame, min_user_interactions: int = 5) -
         "transaction": 5,
     }
 
-    filtered_events["event_strength"] = filtered_events["event"].map(event_weights)
+    filtered_events["event_strength"] = (
+        filtered_events["event"]
+        .map(event_weights)
+        .fillna(0)
+        .astype(int)
+    )
+
+    filtered_events = filtered_events[filtered_events["event_strength"] > 0]
 
     return filtered_events
 

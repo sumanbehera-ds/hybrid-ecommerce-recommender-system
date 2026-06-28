@@ -9,12 +9,17 @@ TEST_OUTPUT = Path("data/processed/gru_test.csv")
 
 
 def create_sequences(df):
+    if "datetime" not in df.columns and "timestamp" in df.columns:
+        df = df.copy()
+        df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
+
     df = df.sort_values(["visitorid", "datetime"])
 
     sequences = []
 
     for user_id, user_data in df.groupby("visitorid"):
         items = user_data["itemid"].tolist()
+        times = user_data["datetime"].tolist()
 
         if len(items) < 3:
             continue
@@ -26,10 +31,29 @@ def create_sequences(df):
             sequences.append({
                 "visitorid": user_id,
                 "input_sequence": input_seq,
-                "target_item": target_item
+                "target_item": target_item,
+                "target_datetime": times[i]
             })
 
     return pd.DataFrame(sequences)
+
+
+def leave_one_out_split(sequence_df):
+    if sequence_df.empty:
+        return sequence_df.copy(), sequence_df.copy()
+
+    sort_columns = ["visitorid"]
+
+    if "target_datetime" in sequence_df.columns:
+        sort_columns.append("target_datetime")
+
+    sequence_df = sequence_df.sort_values(sort_columns).reset_index(drop=True)
+    test_indices = sequence_df.groupby("visitorid").tail(1).index
+
+    test_df = sequence_df.loc[test_indices].reset_index(drop=True)
+    train_df = sequence_df.drop(test_indices).reset_index(drop=True)
+
+    return train_df, test_df
 
 
 if __name__ == "__main__":
@@ -37,10 +61,7 @@ if __name__ == "__main__":
 
     sequence_df = create_sequences(df)
 
-    split_idx = int(len(sequence_df) * 0.8)
-
-    train_df = sequence_df.iloc[:split_idx]
-    test_df = sequence_df.iloc[split_idx:]
+    train_df, test_df = leave_one_out_split(sequence_df)
 
     TRAIN_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 
