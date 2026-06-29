@@ -22,9 +22,9 @@ def evaluate_hybrid(test_path=TEST_PATH, top_n=10, sample_size=1000):
     artifacts = load_artifacts()
     scores = []
 
-    for _, row in test_df.iterrows():
-        sequence = parse_sequence(row["input_sequence"])
-        actual_item = [row["target_item"]]
+    for row in test_df.itertuples(index=False):
+        sequence = parse_sequence(row.input_sequence)
+        actual_item = [row.target_item]
 
         recommendations = hybrid_recommend(
             user_sequence=sequence,

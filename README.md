@@ -191,7 +191,12 @@ Create and activate a virtual environment:
 
 ```bash
 python -m venv rsmenv
+
+# Windows
 rsmenv\Scripts\activate
+
+# Linux / Mac
+source rsmenv/bin/activate
 ```
 
 Install dependencies:
@@ -228,7 +233,7 @@ Create GRU4Rec train/test sequence data:
 python -m src.data.prepare_gru4rec_data
 ```
 
-Create NCF train/test data:
+Create NCF temporal train/test data:
 
 ```bash
 python -m src.data.prepare_ncf_data
@@ -279,6 +284,8 @@ python -m src.models.evaluate_gru4rec
 python -m src.models.evaluate_hybrid
 python -m src.evaluation.compare_runs
 ```
+
+NCF evaluation reports both prediction error (`test_mse`) and ranking quality (`HitRate@K`) using the temporal leave-one-out test split.
 
 ---
 

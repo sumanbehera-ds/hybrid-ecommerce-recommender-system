@@ -1,4 +1,5 @@
 import argparse
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -32,17 +33,26 @@ def temporal_user_sequences(interactions: pd.DataFrame):
         yield user_id, items[:-1], items[-1]
 
 
-def evaluate_item_cf(data_path=DATA_PATH, top_n=10, sample_users=1000):
+def evaluate_item_cf(
+    data_path=DATA_PATH,
+    top_n=10,
+    sample_users=1000,
+    random_state=42,
+):
     artifacts = load_item_cf_artifacts()
     interactions = pd.read_csv(data_path)
+    user_sequences = list(temporal_user_sequences(interactions))
+
+    if sample_users:
+        sample_size = min(sample_users, len(user_sequences))
+        user_sequences = random.Random(random_state).sample(
+            user_sequences,
+            sample_size,
+        )
+
     scores = []
 
-    for idx, (_user_id, sequence, target_item) in enumerate(
-        temporal_user_sequences(interactions)
-    ):
-        if sample_users and idx >= sample_users:
-            break
-
+    for _user_id, sequence, target_item in user_sequences:
         recommendations = recommend_item_cf(
             sequence,
             artifacts["item_encoder"],
@@ -73,6 +83,7 @@ def parse_args():
     parser.add_argument("--data-path", type=Path, default=DATA_PATH)
     parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--sample-users", type=int, default=1000)
+    parser.add_argument("--random-state", type=int, default=42)
     return parser.parse_args()
 
 
@@ -82,6 +93,7 @@ if __name__ == "__main__":
         data_path=args.data_path,
         top_n=args.top_n,
         sample_users=args.sample_users,
+        random_state=args.random_state,
     )
     log_mlflow_run(f"hitrate_at_{args.top_n}", score, args.sample_users)
     print(f"Item-CF HitRate@{args.top_n}:", score)

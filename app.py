@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
@@ -12,12 +13,6 @@ from src.models.hybrid_recommender import (
 
 
 logger = logging.getLogger(__name__)
-
-app = FastAPI(
-    title="E-commerce Recommendation System",
-    description="Hybrid recommender using GRU4Rec, optional Item-CF, and popularity fallback",
-    version="1.0.0"
-)
 
 artifacts = None
 artifact_load_error = None
@@ -49,12 +44,21 @@ def require_artifacts():
         )
 
 
-@app.on_event("startup")
-def load_models_on_startup():
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
     try:
         get_artifacts()
     except Exception:
         pass
+    yield
+
+
+app = FastAPI(
+    title="E-commerce Recommendation System",
+    description="Hybrid recommender using GRU4Rec, optional Item-CF, and popularity fallback",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
 
 class RecommendationRequest(BaseModel):

@@ -1,5 +1,10 @@
-import mlflow
 import pandas as pd
+
+try:
+    import mlflow
+except ModuleNotFoundError:
+    print("mlflow not installed. Run: pip install mlflow")
+    raise SystemExit(1)
 
 
 EXPERIMENT_NAME = "ecommerce_recommender_system"
@@ -19,6 +24,7 @@ if __name__ == "__main__":
     columns = [
         "tags.mlflow.runName",
         "metrics.hitrate_at_10",
+        "metrics.test_mse",
         "metrics.train_loss",
         "metrics.final_train_loss",
         "metrics.final_train_mse",
