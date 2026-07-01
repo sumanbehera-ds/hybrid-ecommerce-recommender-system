@@ -58,6 +58,26 @@ data/raw/events.csv
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    A["RetailRocket events.csv"] --> B["src/data/prepare_interactions.py<br/>deduplicate, timestamp sort, user filtering, event weighting"]
+    B --> C["data/processed/filtered_events.csv"]
+    C --> D["Popularity baseline<br/>global weighted item ranking"]
+    C --> E["Interaction matrix + encoders<br/>user_idx, item_idx, sparse matrix"]
+    E --> F["Item-CF<br/>item-item cosine similarity"]
+    E --> G["NCF<br/>user/item embeddings"]
+    C --> H["GRU4Rec sequences<br/>temporal prefix -> next item"]
+    H --> I["GRU4Rec model"]
+    D --> J["Full local hybrid recommender"]
+    F --> J
+    I --> J
+    D --> K["Lightweight deployed recommender"]
+    I --> K
+    J --> L["app.py<br/>full local FastAPI"]
+    K --> M["app_lightweight.py<br/>Docker/Render FastAPI"]
+    M --> N["Streamlit UI"]
+```
+
 ```text
 Raw RetailRocket events
         |
@@ -82,6 +102,34 @@ Lightweight deployed recommender
         v
 FastAPI API + Streamlit UI
 ```
+
+---
+
+## Current Project Snapshot
+
+These values are from the latest local rebuild of the current workflow. Raw and processed data are intentionally not pushed to GitHub.
+
+| Area | Current value |
+| --- | --- |
+| Raw events | 2,756,101 rows, 1,407,580 users, 235,061 items |
+| Filtered interactions | 948,077 rows, 81,590 users, 103,862 items |
+| Event weights | view = 1, addtocart = 3, transaction = 5 |
+| Interaction matrix | 81,590 users x 103,862 items |
+| GRU4Rec split | 784,897 train rows, 81,590 temporal test rows |
+| NCF split | 870,870 train rows, 77,207 temporal test rows |
+| Deployment artifacts | `deploy_models/gru4rec_model.pth`, `deploy_models/popularity_baseline.pkl` |
+| Latest verification | `14` unit tests passed, syntax check passed, both FastAPI apps returned HTTP 200 |
+
+### Evaluation Snapshot
+
+| Model / path | Metric | Notes |
+| --- | --- | --- |
+| GRU4Rec | HitRate@10 = 0.001 on 1,000 sampled test rows | Local smoke check using the current deployment checkpoint and regenerated temporal split |
+| Hybrid lightweight | HitRate@10 = 0.001 on 1,000 sampled test rows | Uses GRU4Rec first and popularity fallback; Item-CF is not loaded in lightweight deployment |
+| NCF | `test_mse` and `HitRate@K` | Available after running `python -m src.models.train_ncf`; split is temporal leave-one-out |
+| Item-CF | `HitRate@K` | Available after running `python -m src.models.train_item_cf --top-k 100` |
+
+The sampled HitRate values above are smoke checks for the current artifact path, not a final leaderboard claim. The important portfolio point is the evaluation method: temporal leave-one-out splits and top-K ranking metrics.
 
 ---
 
