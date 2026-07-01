@@ -239,11 +239,17 @@ Create and activate a virtual environment:
 
 ```bash
 python -m venv rsmenv
+```
 
-# Windows
+Windows:
+
+```powershell
 rsmenv\Scripts\activate
+```
 
-# Linux / Mac
+Linux / Mac:
+
+```bash
 source rsmenv/bin/activate
 ```
 
@@ -319,10 +325,11 @@ Train GRU4Rec:
 python -m src.models.train_gru4rec
 ```
 
-To also copy a GRU4Rec checkpoint into the deployment artifact folder:
+Copy deployment artifacts manually:
 
-```bash
-python -m src.models.train_gru4rec --deploy-copy
+```powershell
+copy models\gru4rec_model.pth deploy_models\
+copy models\popularity_baseline.pkl deploy_models\
 ```
 
 ---
