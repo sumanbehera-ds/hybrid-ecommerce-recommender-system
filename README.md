@@ -167,7 +167,7 @@ This keeps the production API small enough for cloud deployment.
 |-- streamlit_app.py
 |-- Dockerfile.api
 |-- Dockerfile.streamlit
-|-- requirements.txt
+|-- requirements-dev.txt
 |-- requirements-docker.txt
 |-- deploy_models/
 |   |-- gru4rec_model.pth
@@ -199,17 +199,21 @@ rsmenv\Scripts\activate
 source rsmenv/bin/activate
 ```
 
-Install dependencies:
+Install local development dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-For Docker deployment dependencies, use:
+The local development file includes the full training, evaluation, API, UI, and MLflow workflow.
+
+For Docker/Render runtime dependencies, use:
 
 ```bash
 pip install -r requirements-docker.txt
 ```
+
+Dockerfiles already use `requirements-docker.txt`, so the deployment image stays smaller and does not install MLflow.
 
 ---
 
