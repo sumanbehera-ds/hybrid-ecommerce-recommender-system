@@ -258,3 +258,225 @@ python -m venv rsmenv
 # Windows
 rsmenv\Scripts\activate
 
+# Linux / Mac
+source rsmenv/bin/activate
+```
+
+Install local development dependencies:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+The local development file includes the full training, evaluation, API, UI, and MLflow workflow.
+
+For Docker/Render runtime dependencies, use:
+
+```bash
+pip install -r requirements-docker.txt
+```
+
+Dockerfiles already use `requirements-docker.txt`, so the deployment image stays smaller and does not install MLflow.
+
+---
+
+## Data Pipeline
+
+Prepare cleaned interactions:
+
+```bash
+python -m src.data.prepare_interactions
+```
+
+Build interaction matrix and encoders:
+
+```bash
+python -m src.features.build_interaction_matrix
+```
+
+Create GRU4Rec train/test sequence data:
+
+```bash
+python -m src.data.prepare_gru4rec_data
+```
+
+Create NCF temporal train/test data:
+
+```bash
+python -m src.data.prepare_ncf_data
+```
+
+---
+
+## Training
+
+Train popularity baseline:
+
+```bash
+python -m src.models.train_baseline
+```
+
+Train Item-CF:
+
+```bash
+python -m src.models.train_item_cf
+```
+
+Train NCF:
+
+```bash
+python -m src.models.train_ncf
+```
+
+Train GRU4Rec:
+
+```bash
+python -m src.models.train_gru4rec
+```
+
+To also copy a GRU4Rec checkpoint into the deployment artifact folder:
+
+```bash
+python -m src.models.train_gru4rec --deploy-copy
+```
+
+---
+
+## Evaluation
+
+```bash
+python -m src.models.evaluate_item_cf
+python -m src.models.evaluate_ncf
+python -m src.models.evaluate_gru4rec
+python -m src.models.evaluate_hybrid
+python -m src.evaluation.compare_runs
+```
+
+NCF evaluation reports both prediction error (`test_mse`) and ranking quality (`HitRate@K`) using the temporal leave-one-out test split.
+
+---
+
+## API
+
+### Lightweight deployment API
+
+This is the API used by Docker/Render:
+
+```bash
+uvicorn app_lightweight:app --reload
+```
+
+### Full local hybrid API
+
+This API uses local hybrid logic and optional Item-CF artifacts:
+
+```bash
+uvicorn app:app --reload
+```
+
+### Endpoints
+
+```text
+GET  /
+GET  /health
+POST /recommend
+GET  /recommend/popular
+```
+
+Example request:
+
+```json
+{
+  "item_sequence": [325215, 259884, 216305],
+  "top_n": 10
+}
+```
+
+---
+
+## Streamlit Frontend
+
+Run locally:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The frontend reads the backend URL from `API_URL`:
+
+```bash
+set API_URL=http://127.0.0.1:8000
+streamlit run streamlit_app.py
+```
+
+---
+
+## Docker
+
+Build API image:
+
+```bash
+docker build -f Dockerfile.api -t ecommerce-recommender-api .
+```
+
+Run API:
+
+```bash
+docker run -p 8000:8000 ecommerce-recommender-api
+```
+
+Build Streamlit image:
+
+```bash
+docker build -f Dockerfile.streamlit -t ecommerce-recommender-ui .
+```
+
+---
+
+## Tests
+
+Run tests:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run syntax check:
+
+```bash
+python -m compileall -q app.py app_lightweight.py streamlit_app.py src tests
+```
+
+---
+
+## Deployment Optimization
+
+The full hybrid system works locally, but the full Item-CF similarity matrix is too large for simple cloud deployment. The deployed Render API therefore uses:
+
+- GRU4Rec checkpoint from `deploy_models/gru4rec_model.pth`
+- popularity fallback from `deploy_models/popularity_baseline.pkl`
+- CPU-only PyTorch
+- lightweight FastAPI container
+
+This is the intended production tradeoff: keep the full modeling workflow in the repo, but deploy a smaller, reliable inference path.
+
+---
+
+## Future Improvements
+
+- Retrain GRU4Rec on the full training set with more epochs (current deployment checkpoint uses a fast `sample_size=100000`, `epochs=1` config) to close the gap with the earlier full-pipeline run (HitRate@10 0.019).
+- Content-based recommendation using item metadata.
+- Category-aware recommendation using `category_tree.csv`.
+- Approximate nearest neighbor search for Item-CF/hybrid retrieval.
+- Top-k similarity cache for faster hybrid evaluation.
+- Redis caching for repeated API requests.
+- Better ranking metrics such as Recall@K, NDCG@K, and MRR.
+
+---
+
+## Author
+
+Suman Behera
+
+GitHub:
+https://github.com/sumanbehera-ds
